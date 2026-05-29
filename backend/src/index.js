@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
-
+const taskRoutes = require('./routes/taskRoutes');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -18,6 +18,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Test route
 app.get('/', (req, res) => {

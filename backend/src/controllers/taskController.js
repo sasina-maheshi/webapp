@@ -1,6 +1,11 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+const getIO = () => {
+  const { io } = require('../index');
+  return io;
+};
+
 // CREATE TASK
 const createTask = async (req, res) => {
   try {
@@ -43,6 +48,8 @@ const createTask = async (req, res) => {
       include: { assignedTo: true }
     });
 
+    getIO().emit('taskCreated', task);
+
     res.status(201).json({
       message: 'Task created successfully',
       task
@@ -66,7 +73,6 @@ const getAllTasks = async (req, res) => {
     if (priority) filters.priority = priority;
     if (userId) filters.userId = userId;
 
-    // Collaborators only see their own tasks
     if (req.user.role === 'COLLABORATOR') {
       filters.userId = req.user.id;
     }
@@ -104,7 +110,6 @@ const getTask = async (req, res) => {
       });
     }
 
-    // Collaborators can only see their own tasks
     if (req.user.role === 'COLLABORATOR' && task.userId !== req.user.id) {
       return res.status(403).json({
         error: 'Forbidden',
@@ -137,7 +142,6 @@ const updateTask = async (req, res) => {
       });
     }
 
-    // Collaborators can only update status
     if (req.user.role === 'COLLABORATOR') {
       if (task.userId !== req.user.id) {
         return res.status(403).json({
@@ -150,6 +154,9 @@ const updateTask = async (req, res) => {
         data: { status },
         include: { assignedTo: true }
       });
+
+      getIO().emit('taskUpdated', updatedTask);
+
       return res.json({ message: 'Task updated', task: updatedTask });
     }
 
@@ -165,6 +172,8 @@ const updateTask = async (req, res) => {
       },
       include: { assignedTo: true }
     });
+
+    io.emit('taskUpdated', updatedTask);
 
     res.json({ message: 'Task updated successfully', task: updatedTask });
 
@@ -198,6 +207,8 @@ const deleteTask = async (req, res) => {
     }
 
     await prisma.task.delete({ where: { id } });
+
+    getIO().emit('taskDeleted', { id });
 
     res.json({ message: 'Task deleted successfully' });
 

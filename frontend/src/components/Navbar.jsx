@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:5000');
+const socket = io('https://webapp-production-d767.up.railway.app');
 
 export default function Navbar() {
   const { user, logout } = useAuth();
